@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+html {
+  background-color: white;
+}
+body {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-top: 70px;
+}
+header {
+  display: flex;
+  align-items: center;
+}
+nav {
+  margin-left: auto;
+}
+article {
+  display: flex;
+  padding-top: 50px;
+}
+main {
+  width: 400px;
+  margin-left: 200px;
+}
+aside {
+  width: 200px;
+}
+.light {
+  background-color: yellow;
+  transition: all .5s;
+}
+.dark {
+  background-color: black;
+  transition: all .5s;
+}
+.light, .dark {
+  height: 50px;
+  width: 50px;
+}
+.win {
+  background-color: #111;
+  transition: 5s;
+}
+  </style>
+  <title>Lights out</title>
+</head>
+<body>
+  <header>
+    <h1>Lights out</h1>
+    <!-- <nav><a href="/">Other</a></nav> -->
+  </header>
+  <article>
+    <main id="lo">table with buttons</main>
+    <aside><button id="reset-btn">reset</button></aside>
+  </article>
+  <script>
+const root = document.getElementById('lo')
+
+class Field {
+  cells = null
+  size = null
+
+  constructor () {}
+
+  init (size) {
+    document.documentElement.classList.remove('win')
+
+    this.size = size
+    this.cells = []
+    for (let j = 0; j < size; j += 1) {
+      this.cells[j] = []
+      for (let i = 0; i < size; i += 1) {
+        this.cells[j][i] = { value: false, element: null }
+      }
+    }
+
+    const table = document.createElement('table')
+    table.append(...this.cells.map((row, y) => {
+      const tr = document.createElement('tr')
+      tr.append(...row.map((c, x) => {
+        const td = document.createElement('td')
+        const button = document.createElement('button')
+        button.classList.add((c.value) ? 'light' : 'dark')
+        button.addEventListener('click', () => { globalThis.handleMove(x, y) })
+        td.appendChild(button)
+        this.cells[y][x].element = button
+        return td
+      }))
+      return tr
+    }))
+    root.replaceChildren(table)
+
+    const numOfTurns = Math.floor(Math.random() * 20) + 20
+    for (let i = 0; i < numOfTurns; i += 1) this.handleMove(Math.floor(Math.random() * this.size), Math.floor(Math.random() * this.size))
+  }
+
+  handleMove (x, y) {
+    this.invert(x, y)
+    if (x !== 0) this.invert(x - 1, y)
+    if (x !== this.size - 1) this.invert(x + 1, y)
+    if (y !== 0) this.invert(x, y - 1)
+    if (y !== this.size - 1) this.invert(x, y + 1)
+    this.checkWin()
+  }
+
+  invert (x, y) {
+    this.cells[y][x].value = !this.cells[y][x].value
+    this.cells[y][x].element.classList.toggle('light')
+    this.cells[y][x].element.classList.toggle('dark')
+  }
+
+  checkWin () {
+    if (this.cells.every((row) => row.every((c) => c.value === false))) {
+      document.documentElement.classList.add('win')
+    }
+  }
+}
+
+const field = new Field()
+field.init(5)
+globalThis.handleMove = field.handleMove.bind(field)
+globalThis.reset = field.init.bind(field, 5)
+document.getElementById('reset-btn').addEventListener('click', globalThis.reset)
+  </script>
+</body>
+</html>
